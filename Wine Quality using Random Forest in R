@@ -1,0 +1,50 @@
+# Loading the required libraries for the dataset
+library(randomForest)
+library(caret)
+# Load the dataset and explore
+wine = read.csv(file.choose())
+head(wine)
+str(wine)
+summary(wine)
+# Check for missing values
+miss = sum(is.na(wine))
+print(miss)
+sapply(wine,class)
+wine$taste <- ifelse(wine$quality < 6, 'bad','good')
+wine$taste[wine$quality == 6] <- 'normal'
+wine$taste <- as.factor(wine$taste)
+table(wine$taste)
+# Spliting the dataset into two sets Training set and Validation set
+wine_set <- createDataPartition(y=wine$taste,p= 0.70, list = FALSE)
+wine_train <- wine[wine_set,]
+wine_valid <- wine[-wine_set,]
+
+# Create randomForest with default parameters
+model_1 <- randomForest(taste~.-quality, data = wine_train,importance = TRUE)
+model_1
+# Fine tuning the parameters with required mtry
+model_2 <- randomForest(taste~.-quality,data = wine_train, mtry = 6, importance = TRUE)
+model_2
+#Predicting on training set
+pred_mod1<-predict(model_1,wine_train,type="class")
+table(pred_mod1, wine_train$taste)
+mean(pred_mod1 == wine_train$taste)
+# Predicting on Validation set
+pred_mod2 <- predict(model_1, wine_valid, type="class")
+table(pred_mod, wine_valid$taste)
+mean(pred_mod2 == wine_valid$taste)
+# To check important variable
+importance(model_1)
+varImpPlot(model_1)
+confusion_matrix = table(pred_mod2, wine_valid$taste)
+accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))*100
+accuracy
+# From the variable importance plot there are three important feature for the model
+model_3 <- randomForest(taste ~ alcohol + sulphates+ total.sulfur.dioxide+volatile.acidity,data = wine_train,mtry= 4, importance=TRUE)
+model_3
+pred_mod3 <- predict(model_3,wine_valid, type="class")
+confusion_matrix1 = table(pred_mod3, wine_valid$taste)
+accuracy_1 = (sum(diag(confusion_matrix1))/sum(confusion_matrix1))*100
+accuracy_1
+# As we can see there increase in accuracy of the decision tree if consider only the important feature in the dataset
+
